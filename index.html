@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SPI言語 適性検査シミュレーター</title>
+<style>
+  :root {
+    --bg: #f5f4f1;
+    --card-bg: #ffffff;
+    --border: #d6d3d1;
+    --border-light: #e7e5e4;
+    --header-bg: #0f172a;
+    --header-bg2: #1e293b;
+    --header-text: #f8fafc;
+    --accent-amber: #f5b400;
+    --accent-rose: #e11d48;
+    --accent-rose-dark: #be123c;
+    --accent-rose-bg: #fff1f2;
+    --text-main: #1c1917;
+    --text-muted: #57534e;
+    --text-faint: #a8a29e;
+    --emerald: #059669;
+    --emerald-bg: #ecfdf5;
+    --slate: #334155;
+    --slate-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .serif {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Times New Roman", serif;
+  }
+  #app-wrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+  }
+  #app {
+    width: 100%;
+    max-width: 640px;
+  }
+  .header-bar {
+    background: var(--header-bg);
+    color: var(--header-text);
+    border-radius: 3px 3px 0 0;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    font-weight: 600;
+    margin: 0 0 4px 0;
+  }
+  .header-title {
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .header-progress-label {
+    font-size: 12px;
+    color: #cbd5e1;
+    margin: 0 0 2px 0;
+    text-align: right;
+  }
+  .header-progress-value {
+    font-size: 22px;
+    margin: 0;
+    text-align: right;
+  }
+  .header-progress-value span {
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card-inner { padding: 32px; }
+  h2.title {
+    font-size: 24px;
+    margin: 0 0 16px 0;
+  }
+  p.lead {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #3f3c39;
+    margin: 0 0 16px 0;
+  }
+  ul.info-list {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.9;
+    margin: 0 0 24px 0;
+    padding-left: 20px;
+  }
+  .small-label {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin: 0 0 8px 0;
+  }
+  .len-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .len-btn {
+    padding: 10px 0;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--slate);
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .len-btn:hover { border-color: var(--slate); }
+  .len-btn.active {
+    background: var(--header-bg);
+    color: #fff;
+    border-color: var(--header-bg);
+  }
+  .primary-btn {
+    width: 100%;
+    background: var(--accent-rose);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px 0;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .primary-btn:hover { background: var(--accent-rose-dark); }
+  .dark-btn {
+    width: 100%;
+    background: var(--header-bg);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px 0;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .dark-btn:hover { background: var(--header-bg2); }
+
+  .q-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .cat-badge {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--slate);
+    background: var(--slate-bg);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  .diff-stars {
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--accent-amber);
+  }
+  .prompt-text {
+    font-size: 13px;
+    color: var(--text-faint);
+    margin: 0 0 8px 0;
+  }
+  .stem-box {
+    background: #fafaf9;
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    padding: 18px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    line-height: 1.9;
+    white-space: pre-line;
+  }
+  .choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .choice-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 14px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--slate);
+    background: #fafaf9;
+  }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn .letter {
+    font-weight: 700;
+    flex: none;
+    width: 18px;
+  }
+  .choice-btn.correct {
+    border-color: var(--emerald);
+    background: var(--emerald-bg);
+    color: #065f46;
+  }
+  .choice-btn.incorrect {
+    border-color: var(--accent-rose);
+    background: var(--accent-rose-bg);
+    color: #9f1239;
+  }
+  .choice-btn.faded {
+    border-color: var(--border-light);
+    color: var(--text-faint);
+  }
+  .feedback-block {
+    margin-top: 16px;
+    border-top: 1px solid var(--border-light);
+    padding-top: 16px;
+  }
+  .feedback-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+  }
+  .feedback-title.correct { color: var(--emerald); }
+  .feedback-title.incorrect { color: var(--accent-rose-dark); }
+  .feedback-explanation {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin: 0 0 16px 0;
+  }
+
+  /* result screen */
+  .result-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 0 0 4px 0;
+  }
+  .grade-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .grade-circle {
+    flex: none;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 4px solid var(--accent-rose);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .grade-circle span {
+    font-size: 30px;
+    color: var(--accent-rose-dark);
+  }
+  .grade-title { font-size: 17px; margin: 0 0 2px 0; }
+  .grade-label { font-size: 14px; color: var(--text-muted); margin: 0; }
+  .grade-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin: 0 0 24px 0;
+  }
+  .gauge-wrap { margin-bottom: 24px; }
+  .gauge-label { font-size: 12px; color: var(--text-faint); margin: 0 0 6px 0; }
+  .gauge-track {
+    display: flex;
+    gap: 4px;
+  }
+  .gauge-seg {
+    flex: 1;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--border-light);
+  }
+  .gauge-seg.past { background: #fcd34d; }
+  .gauge-seg.current { background: var(--accent-rose); }
+  .gauge-caption {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-box {
+    background: #fafaf9;
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    padding: 12px;
+  }
+  .stat-label { font-size: 12px; color: var(--text-faint); margin: 0 0 2px 0; }
+  .stat-value { font-size: 20px; margin: 0; }
+
+  .cat-stats { margin-bottom: 24px; }
+  .cat-stats-label { font-size: 12px; color: var(--text-faint); margin: 0 0 10px 0; }
+  .cat-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .cat-stat-name {
+    font-size: 12px;
+    width: 96px;
+    flex: none;
+    color: var(--text-muted);
+  }
+  .cat-stat-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: var(--border-light);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .cat-stat-bar-fill {
+    height: 100%;
+    background: var(--slate);
+  }
+  .cat-stat-frac {
+    font-size: 12px;
+    width: 40px;
+    flex: none;
+    text-align: right;
+    color: var(--text-faint);
+  }
+
+  .review-section { margin-top: 8px; margin-bottom: 24px; }
+  .review-header {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+  }
+  .review-sub {
+    font-size: 12.5px;
+    color: var(--text-faint);
+    margin: 0 0 14px 0;
+  }
+  .review-item {
+    border: 1px solid var(--border-light);
+    border-left: 3px solid var(--accent-rose);
+    border-radius: 3px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: #fffdfc;
+  }
+  .review-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .review-item-num {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-weight: 700;
+  }
+  .review-stem {
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-line;
+    margin: 0 0 10px 0;
+  }
+  .review-answer-line {
+    font-size: 13px;
+    margin: 0 0 4px 0;
+    line-height: 1.7;
+  }
+  .review-answer-line .wrong-ans { color: var(--accent-rose-dark); font-weight: 700; }
+  .review-answer-line .right-ans { color: var(--emerald); font-weight: 700; }
+  .review-explanation {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin: 8px 0 0 0;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-light);
+  }
+  .all-correct-msg {
+    font-size: 14px;
+    color: var(--emerald);
+    background: var(--emerald-bg);
+    border-radius: 3px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+  }
+  .footnote {
+    font-size: 11px;
+    color: var(--text-faint);
+    line-height: 1.7;
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+<div id="app-wrap"><div id="app"></div></div>
+<script>
+const QUESTIONS = [
+  // ── 二語の関係 ──────────────────────────────
+  {
+    id: "k1", category: "二語の関係", difficulty: 1,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "医者：病院",
+    choices: ["教師：学校", "医者：患者", "本：図書館", "料理：レストラン"],
+    answer: 0,
+    explanation: "「医者：病院」は職業とその職場の関係。同様に「教師：学校」も職業と職場の関係になる。",
+  },
+  {
+    id: "k2", category: "二語の関係", difficulty: 2,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "パソコン：電気",
+    choices: ["車：ガソリン", "車：道路", "電話：会話", "テレビ：リモコン"],
+    answer: 0,
+    explanation: "「パソコン：電気」は、動作させるために必要とするものの関係。「車：ガソリン」も同様に、車を動かすために必要なもの。",
+  },
+  {
+    id: "k3", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "楽観：悲観",
+    choices: ["積極：消極", "医者：看護師", "電車：改札", "花：蜂"],
+    answer: 0,
+    explanation: "「楽観：悲観」は反意語の関係。同様に「積極：消極」も反意語の関係になる。",
+  },
+  {
+    id: "k4", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "永久：永遠",
+    choices: ["立派：優秀", "拡大：縮小", "出発：到着", "高い：低い"],
+    answer: 0,
+    explanation: "「永久：永遠」はどちらも「ずっと続くこと」を表す同意語の関係。「立派：優秀」も同様に近い意味を持つ同意語の関係。",
+  },
+  {
+    id: "k5", category: "二語の関係", difficulty: 4,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "指：手",
+    choices: ["花びら：花", "医者：病院", "犬：猫", "本：作家"],
+    answer: 0,
+    explanation: "「指：手」は部分と全体の関係。同様に「花びら：花」も部分と全体の関係になる。",
+  },
+  {
+    id: "k6", category: "二語の関係", difficulty: 5,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "過労：病気",
+    choices: ["不注意：事故", "医者：治療", "雨：傘", "教師：授業"],
+    answer: 0,
+    explanation: "「過労：病気」は原因と結果の関係。同様に「不注意：事故」も原因と結果の関係になる。",
+  },
+  {
+    id: "k7", category: "二語の関係", difficulty: 1,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "先生：生徒",
+    choices: ["監督：選手", "医者：病院", "本：作家", "花：蜂"],
+    answer: 0,
+    explanation: "「先生：生徒」は指導する側とされる側の関係。同様に「監督：選手」も指導する側とされる側の関係。",
+  },
+  {
+    id: "k8", category: "二語の関係", difficulty: 2,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "傘：雨",
+    choices: ["眼鏡：近視", "靴：足", "本：図書館", "車：道路"],
+    answer: 0,
+    explanation: "「傘：雨」は、その状況に対処するために使う道具の関係。「眼鏡：近視」も同様の関係になる。",
+  },
+  {
+    id: "k9", category: "二語の関係", difficulty: 2,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "鍵：ドア",
+    choices: ["リモコン：テレビ", "車：ガソリン", "本：作家", "花：庭"],
+    answer: 0,
+    explanation: "「鍵：ドア」は、道具とその道具が作用する対象の関係。「リモコン：テレビ」も同様の関係。",
+  },
+  {
+    id: "k10", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "甘い：辛い",
+    choices: ["明るい：暗い", "医者：看護師", "電車：改札", "犬：猫"],
+    answer: 0,
+    explanation: "「甘い：辛い」は反意語の関係。同様に「明るい：暗い」も反意語の関係になる。",
+  },
+  {
+    id: "k11", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "果物：りんご",
+    choices: ["動物：ライオン", "医者：病院", "花：庭", "本：作家"],
+    answer: 0,
+    explanation: "「果物：りんご」はカテゴリーとその具体例の関係。「動物：ライオン」も同様の関係になる。",
+  },
+  {
+    id: "k12", category: "二語の関係", difficulty: 4,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "氷：水",
+    choices: ["蒸気：水", "医者：病院", "花：蜂", "本：作家"],
+    answer: 0,
+    explanation: "「氷：水」は同じ物質の状態変化の関係。「蒸気：水」も同様に、水が姿を変えたものである。",
+  },
+  {
+    id: "k13", category: "二語の関係", difficulty: 4,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "種：花",
+    choices: ["卵：ひな", "医者：病院", "犬：猫", "本：作家"],
+    answer: 0,
+    explanation: "「種：花」は成長の過程を表す関係。「卵：ひな」も同様に、成長して姿を変える関係。",
+  },
+  {
+    id: "k14", category: "二語の関係", difficulty: 5,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "倹約：浪費",
+    choices: ["節制：放縦", "医者：治療", "雨：傘", "教師：授業"],
+    answer: 0,
+    explanation: "「倹約：浪費」は反意語の関係。同様に「節制：放縦」も反意語の関係になる。",
+  },
+  {
+    id: "k15", category: "二語の関係", difficulty: 1,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "看護師：病院",
+    choices: ["弁護士：法律事務所", "看護師：患者", "本：作家", "花：庭"],
+    answer: 0,
+    explanation: "「看護師：病院」は職業とその職場の関係。同様に「弁護士：法律事務所」も職業と職場の関係。",
+  },
+  {
+    id: "k16", category: "二語の関係", difficulty: 1,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "パン：小麦粉",
+    choices: ["豆腐：大豆", "医者：病院", "花：庭", "犬：猫"],
+    answer: 0,
+    explanation: "「パン：小麦粉」は製品と原材料の関係。同様に「豆腐：大豆」も製品と原材料の関係。",
+  },
+  {
+    id: "k17", category: "二語の関係", difficulty: 1,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "兄：弟",
+    choices: ["姉：妹", "父：息子", "医者：病院", "本：作家"],
+    answer: 0,
+    explanation: "「兄：弟」は同世代の兄弟姉妹の関係。同様に「姉：妹」も同世代の姉妹の関係。「父：息子」は世代が異なるため関係が異なる。",
+  },
+  {
+    id: "k18", category: "二語の関係", difficulty: 2,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "温度計：気温",
+    choices: ["体重計：体重", "医者：病院", "花：庭", "犬：猫"],
+    answer: 0,
+    explanation: "「温度計：気温」は計測器とその計測対象の関係。同様に「体重計：体重」も計測器と計測対象の関係。",
+  },
+  {
+    id: "k19", category: "二語の関係", difficulty: 2,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "財布：お金",
+    choices: ["本棚：本", "医者：病院", "花：庭", "犬：猫"],
+    answer: 0,
+    explanation: "「財布：お金」は入れ物とその中身の関係。同様に「本棚：本」も入れ物と中身の関係。",
+  },
+  {
+    id: "k20", category: "二語の関係", difficulty: 2,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "教科書：勉強",
+    choices: ["地図：道案内", "医者：病院", "花：庭", "犬：猫"],
+    answer: 0,
+    explanation: "「教科書：勉強」は道具とその用途の関係。同様に「地図：道案内」も道具と用途の関係。",
+  },
+  {
+    id: "k21", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "質素：華美",
+    choices: ["単純：複雑", "医者：看護師", "電車：改札", "花：蜂"],
+    answer: 0,
+    explanation: "「質素：華美」は反意語の関係。同様に「単純：複雑」も反意語の関係になる。",
+  },
+  {
+    id: "k22", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "慎重：軽率",
+    choices: ["謙虚：傲慢", "医者：治療", "雨：傘", "教師：授業"],
+    answer: 0,
+    explanation: "「慎重：軽率」は反意語の関係。同様に「謙虚：傲慢」も反意語の関係になる。",
+  },
+  {
+    id: "k23", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "楽器：ピアノ",
+    choices: ["乗り物：自転車", "医者：病院", "花：庭", "本：作家"],
+    answer: 0,
+    explanation: "「楽器：ピアノ」はカテゴリーとその具体例の関係。同様に「乗り物：自転車」もカテゴリーと具体例の関係。",
+  },
+  {
+    id: "k24", category: "二語の関係", difficulty: 3,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "建築家：設計図",
+    choices: ["作家：小説", "医者：病院", "花：庭", "犬：猫"],
+    answer: 0,
+    explanation: "「建築家：設計図」は制作者とその制作物の関係。同様に「作家：小説」も制作者と制作物の関係。",
+  },
+  {
+    id: "k25", category: "二語の関係", difficulty: 4,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "幼虫：蝶",
+    choices: ["おたまじゃくし：かえる", "医者：病院", "花：蜂", "本：作家"],
+    answer: 0,
+    explanation: "「幼虫：蝶」は成長・変態の過程を表す関係。同様に「おたまじゃくし：かえる」も変態の過程を表す関係。",
+  },
+  {
+    id: "k26", category: "二語の関係", difficulty: 4,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "医師：聴診器",
+    choices: ["大工：金づち", "医者：病院", "花：庭", "犬：猫"],
+    answer: 0,
+    explanation: "「医師：聴診器」は職業とその職業を象徴する道具の関係。同様に「大工：金づち」も職業と象徴的な道具の関係。",
+  },
+  {
+    id: "k27", category: "二語の関係", difficulty: 4,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "濃霧：視界不良",
+    choices: ["地震：停電", "医者：治療", "雨：傘", "教師：授業"],
+    answer: 0,
+    explanation: "「濃霧：視界不良」は原因と結果の関係。同様に「地震：停電」も原因と結果の関係になる。",
+  },
+  {
+    id: "k28", category: "二語の関係", difficulty: 5,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "帰納法：演繹法",
+    choices: ["具体：抽象", "医者：治療", "雨：傘", "教師：授業"],
+    answer: 0,
+    explanation: "「帰納法：演繹法」は対をなす概念（対照的な方法論）の関係。同様に「具体：抽象」も対をなす概念の関係。",
+  },
+  {
+    id: "k29", category: "二語の関係", difficulty: 5,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "独裁：民主",
+    choices: ["集権：分権", "医者：治療", "雨：傘", "教師：授業"],
+    answer: 0,
+    explanation: "「独裁：民主」は対をなす概念（対照的な政治体制）の関係。同様に「集権：分権」も対をなす概念の関係。",
+  },
+  {
+    id: "k30", category: "二語の関係", difficulty: 5,
+    prompt: "最初の二語と同じ関係の組み合わせを選びなさい。",
+    stem: "端緒：結末",
+    choices: ["発端：終焉", "医者：治療", "雨：傘", "教師：授業"],
+    answer: 0,
+    explanation: "「端緒：結末」は物事の始まりと終わりを表す対義的な関係。同様に「発端：終焉」も同じ関係になる。",
+  },
+
+  // ── 語句の意味 ──────────────────────────────
+  {
+    id: "i1", category: "語句の意味", difficulty: 1,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "彼は多忙な毎日を送っている。",
+    choices: ["とても暇なこと", "とても忙しいこと", "退屈なこと", "疲れていること"],
+    answer: 1,
+    explanation: "「多忙」＝非常に忙しいこと。",
+  },
+  {
+    id: "i2", category: "語句の意味", difficulty: 2,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "経済の先行きを憂慮する声が多い。",
+    choices: ["喜ぶこと", "心配し思い悩むこと", "怒ること", "油断すること"],
+    answer: 1,
+    explanation: "「憂慮」＝物事の成り行きを心配し、思い悩むこと。",
+  },
+  {
+    id: "i3", category: "語句の意味", difficulty: 3,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "彼の仕事ぶりは杜撰だと評判が悪い。",
+    choices: ["几帳面なこと", "いい加減でずさんなこと", "丁寧なこと", "秘密にすること"],
+    answer: 1,
+    explanation: "「杜撰」＝いい加減で、確認や管理が不十分であること。",
+  },
+  {
+    id: "i4", category: "語句の意味", difficulty: 4,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "彼はこの理論を敷衍して説明した。",
+    choices: ["要約すること", "詳しく説明を広げること", "省略すること", "否定すること"],
+    answer: 1,
+    explanation: "「敷衍」＝意味や趣旨を押し広げて詳しく説明すること。",
+  },
+  {
+    id: "i5", category: "語句の意味", difficulty: 5,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "彼は自らの才能を韜晦する人物だった。",
+    choices: ["才能を隠すこと", "大いに褒めること", "激しく怒ること", "深く後悔すること"],
+    answer: 0,
+    explanation: "「韜晦」＝自分の才能や地位、本心などをつつみ隠すこと。",
+  },
+  {
+    id: "i6", category: "語句の意味", difficulty: 5,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "不正が発覚し、慙愧に堪えない思いだ。",
+    choices: ["非常に嬉しい気持ち", "深く恥じ入る気持ち", "全く気にしない気持ち", "大いに誇らしい気持ち"],
+    answer: 1,
+    explanation: "「慙愧に堪えない」＝自分の言動を深く恥じ入る気持ちを抑えきれないこと。",
+  },
+  {
+    id: "i7", category: "語句の意味", difficulty: 1,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "合格の知らせに歓喜した。",
+    choices: ["悲しむこと", "大いに喜ぶこと", "怒ること", "驚くこと"],
+    answer: 1,
+    explanation: "「歓喜」＝非常に喜ぶこと。",
+  },
+  {
+    id: "i8", category: "語句の意味", difficulty: 1,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "突然の質問に困惑した。",
+    choices: ["大いに喜ぶこと", "どうしてよいか分からず困ること", "怒ること", "安心すること"],
+    answer: 1,
+    explanation: "「困惑」＝どうすればよいか分からず、対応に困ること。",
+  },
+  {
+    id: "i9", category: "語句の意味", difficulty: 2,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "今後の業績に懸念がある。",
+    choices: ["気にかかって心配すること", "大いに喜ぶこと", "忘れてしまうこと", "油断すること"],
+    answer: 0,
+    explanation: "「懸念」＝ある事柄が気にかかって心配すること。",
+  },
+  {
+    id: "i10", category: "語句の意味", difficulty: 2,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "その判断は妥当だと評価された。",
+    choices: ["間違っていること", "適切で無理のないこと", "非常に難しいこと", "曖昧なこと"],
+    answer: 1,
+    explanation: "「妥当」＝実情や道理にかなっていて、無理がないこと。",
+  },
+  {
+    id: "i11", category: "語句の意味", difficulty: 3,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "資金不足により計画は頓挫した。",
+    choices: ["順調に進むこと", "勢いが急に止まってしまうこと", "大きく成功すること", "ゆっくり進むこと"],
+    answer: 1,
+    explanation: "「頓挫」＝物事が勢いを失い、途中で行き詰まってしまうこと。",
+  },
+  {
+    id: "i12", category: "語句の意味", difficulty: 4,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "その説明は詭弁にすぎない。",
+    choices: ["筋の通った正しい主張", "道理に合わないこじつけの議論", "丁寧な言葉遣い", "単純明快な説明"],
+    answer: 1,
+    explanation: "「詭弁」＝道理に合わないのに、うまく理屈をこじつけて言いくるめようとする議論。",
+  },
+  {
+    id: "i13", category: "語句の意味", difficulty: 5,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "上司の意向を忖度して行動する。",
+    choices: ["他人の心情を推し量ること", "強く反対すること", "正直に伝えること", "全く関心を持たないこと"],
+    answer: 0,
+    explanation: "「忖度」＝他人の心情や考えを推し量ること。",
+  },
+  {
+    id: "i14", category: "語句の意味", difficulty: 5,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "内部対立により組織は瓦解した。",
+    choices: ["少しずつ発展すること", "物事が根底から崩れること", "完全に修復すること", "静かに始まること"],
+    answer: 1,
+    explanation: "「瓦解」＝屋根瓦が崩れ落ちるように、組織や体制が根底から崩れてしまうこと。",
+  },
+  {
+    id: "i15", category: "語句の意味", difficulty: 1,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "無事の知らせを聞いて安堵した。",
+    choices: ["心配すること", "安心すること", "怒ること", "驚くこと"],
+    answer: 1,
+    explanation: "「安堵」＝心配事がなくなり、安心すること。",
+  },
+  {
+    id: "i16", category: "語句の意味", difficulty: 1,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "突然の知らせに動揺を隠せなかった。",
+    choices: ["落ち着くこと", "心が乱れて落ち着かなくなること", "喜ぶこと", "油断すること"],
+    answer: 1,
+    explanation: "「動揺」＝予期しない出来事などで、心が乱れて落ち着かなくなること。",
+  },
+  {
+    id: "i17", category: "語句の意味", difficulty: 1,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "先輩から激励の言葉をもらった。",
+    choices: ["励まして元気づけること", "厳しく叱ること", "無視すること", "疑うこと"],
+    answer: 0,
+    explanation: "「激励」＝相手を励まして、奮い立たせること。",
+  },
+  {
+    id: "i18", category: "語句の意味", difficulty: 2,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "彼の発言は今後の方針を示唆している。",
+    choices: ["それとなく示すこと", "はっきりと断言すること", "完全に否定すること", "忘れ去ること"],
+    answer: 0,
+    explanation: "「示唆」＝それとなく物事を示し、知らせること。",
+  },
+  {
+    id: "i19", category: "語句の意味", difficulty: 2,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "今年は顕著な業績の改善が見られた。",
+    choices: ["目立たないこと", "はっきりと目立つこと", "曖昧なこと", "秘密であること"],
+    answer: 1,
+    explanation: "「顕著」＝はっきりとして、際立って目立つ様子。",
+  },
+  {
+    id: "i20", category: "語句の意味", difficulty: 2,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "解決策を模索している段階だ。",
+    choices: ["手がかりのないまま、あれこれ試みること", "確信を持って進むこと", "すぐに諦めること", "完全に無視すること"],
+    answer: 0,
+    explanation: "「模索」＝手がかりのない中で、あれこれ試しながら探し求めること。",
+  },
+  {
+    id: "i21", category: "語句の意味", difficulty: 3,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "資金繰りが逼迫している。",
+    choices: ["余裕があること", "状況が差し迫って余裕がなくなること", "順調に進むこと", "落ち着いていること"],
+    answer: 1,
+    explanation: "「逼迫」＝物事の状況が差し迫り、余裕がなくなること。",
+  },
+  {
+    id: "i22", category: "語句の意味", difficulty: 3,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "疑念を払拭するために説明を尽くした。",
+    choices: ["すっかり取り除くこと", "さらに強めること", "隠しておくこと", "曖昧にすること"],
+    answer: 0,
+    explanation: "「払拭」＝好ましくないものを、すっかり取り除くこと。",
+  },
+  {
+    id: "i23", category: "語句の意味", difficulty: 3,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "労使交渉はようやく妥結した。",
+    choices: ["交渉が決裂すること", "交渉がまとまること", "交渉を中断すること", "交渉を拒否すること"],
+    answer: 1,
+    explanation: "「妥結」＝交渉などで意見が一致し、まとまること。",
+  },
+  {
+    id: "i24", category: "語句の意味", difficulty: 3,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "彼の行動は常識から逸脱していた。",
+    choices: ["本来の道筋や規範から外れること", "規則を忠実に守ること", "目標を達成すること", "慎重に検討すること"],
+    answer: 0,
+    explanation: "「逸脱」＝本来の道筋や決められた範囲から外れること。",
+  },
+  {
+    id: "i25", category: "語句の意味", difficulty: 4,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "理想と現実の相克に悩む。",
+    choices: ["互いに協力し合うこと", "対立する物事がせめぎ合うこと", "完全に一致すること", "静かに共存すること"],
+    answer: 1,
+    explanation: "「相克」＝対立するもの同士が、互いにせめぎ合うこと。",
+  },
+  {
+    id: "i26", category: "語句の意味", difficulty: 4,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "かつての名門企業も凋落した。",
+    choices: ["勢いが盛んになること", "勢いが衰えて落ちぶれること", "急速に発展すること", "変化しないこと"],
+    answer: 1,
+    explanation: "「凋落」＝盛んだった勢いが衰え、落ちぶれること。",
+  },
+  {
+    id: "i27", category: "語句の意味", difficulty: 4,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "彼の思惑通りに事が進んだ。",
+    choices: ["事前に抱いている考えや目算", "何も考えていない状態", "明確な証拠", "過去の記録"],
+    answer: 0,
+    explanation: "「思惑」＝将来を見越して、心の中で立てている考えや目算。",
+  },
+  {
+    id: "i28", category: "語句の意味", difficulty: 5,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "決勝での活躍は、まさに面目躍如だった。",
+    choices: ["評判通りの実力や真価が発揮される様子", "全く期待外れであった様子", "恥をかいてしまった様子", "姿を隠している様子"],
+    answer: 0,
+    explanation: "「面目躍如」＝世間の評価にふさわしい実力や活躍ぶりが、生き生きと発揮される様子。",
+  },
+  {
+    id: "i29", category: "語句の意味", difficulty: 5,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "原因が分からず、隔靴掻痒の感がある。",
+    choices: ["物事が思うようにいかず、もどかしいこと", "物事が非常にスムーズに進むこと", "完全に満足すること", "大いに喜ぶこと"],
+    answer: 0,
+    explanation: "「隔靴掻痒」＝靴の上から足のかゆい所をかくように、物事が思うようにいかずもどかしいこと。",
+  },
+  {
+    id: "i30", category: "語句の意味", difficulty: 5,
+    prompt: "下線部の言葉の意味として最も適切なものを選びなさい。",
+    stem: "一度の敗退にめげず、捲土重来を期す。",
+    choices: ["一度失敗した者が、再び勢いを盛り返すこと", "一度の成功に満足して努力をやめること", "静かに引退すること", "他人に責任を押し付けること"],
+    answer: 0,
+    explanation: "「捲土重来」＝一度敗れた者が、再び勢いを盛り返して巻き返すこと。",
+  },
+
+  // ── 語句の用法 ──────────────────────────────
+  {
+    id: "y1", category: "語句の用法", difficulty: 1,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "今年の夏はとてもあつい。",
+    choices: ["お茶があついので気をつける", "今年の夏はあつい日が続く", "彼はあつい人だと言われる", "この本はあつい本だ"],
+    answer: 1,
+    explanation: "「あつい（暑い）」は気温が高いことを表す。選択肢の中で気候を表しているのはBのみ（他は「熱い」「厚い／篤い」）。",
+  },
+  {
+    id: "y2", category: "語句の用法", difficulty: 2,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "この薬はよくきく。",
+    choices: ["好きな音楽をきく", "この洗剤はよくきく", "先輩の話をきく", "駅までの道をきく"],
+    answer: 1,
+    explanation: "「きく（効く）」は効果があることを表す。「洗剤がよくきく」も同じ用法。",
+  },
+  {
+    id: "y3", category: "語句の用法", difficulty: 3,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "面接で緊張してあがってしまった。",
+    choices: ["二階にあがる", "雨があがる", "人前で話すとあがる", "給料があがる"],
+    answer: 2,
+    explanation: "「あがる」は緊張して落ち着かなくなることを表す。「人前で話すとあがる」も同じ用法。",
+  },
+  {
+    id: "y4", category: "語句の用法", difficulty: 3,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "毎日しっかり栄養をとる。",
+    choices: ["記念に写真をとる", "事故の責任をとる", "忙しくて食事をとる時間がない", "また一つ年をとる"],
+    answer: 2,
+    explanation: "「とる」は摂取する、口にするという意味。「食事をとる」も同じ用法。",
+  },
+  {
+    id: "y5", category: "語句の用法", difficulty: 4,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼に迷惑をかけてしまった。",
+    choices: ["壁に絵をかける", "友人に電話をかける", "眼鏡をかける", "この作業には手間をかける"],
+    answer: 3,
+    explanation: "「かける」は何かを対象に及ぼす・費やすという用法。「迷惑をかける」も「手間をかける」も、相手や物事に何かを及ぼす・投じるという点で同じ用法。",
+  },
+  {
+    id: "y6", category: "語句の用法", difficulty: 5,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "医者に体をみてもらう。",
+    choices: ["休日に映画をみる", "スープの味をみる", "医者が患者をみる", "夜空の星をみる"],
+    answer: 2,
+    explanation: "「みる」がここでは「診察する」という意味で使われている。「患者をみる」も同じく診察するという用法。",
+  },
+  {
+    id: "y7", category: "語句の用法", difficulty: 1,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "夜になって、街灯がつく。",
+    choices: ["約束の場所に着く", "服に汚れが付く", "テレビの電源がつく", "新しい発見に気が付く"],
+    answer: 2,
+    explanation: "「つく（点く）」は明かりがともることを表す。「テレビの電源がつく」も同じ用法。",
+  },
+  {
+    id: "y8", category: "語句の用法", difficulty: 2,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "誕生日にプレゼントをあげる。",
+    choices: ["質問があるので手をあげる", "友達に本をあげる", "練習を重ねて成果をあげる", "セール中に値段をあげる"],
+    answer: 1,
+    explanation: "「あげる」がここでは「贈る」という意味で使われている。「友達に本をあげる」も同じ用法。",
+  },
+  {
+    id: "y9", category: "語句の用法", difficulty: 2,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は都会にすんでいる。",
+    choices: ["用事がすんでから出かける", "彼は田舎にすんでいる", "気がすむまで話し合う", "借金がすんで安心する"],
+    answer: 1,
+    explanation: "「すむ（住む）」は居住することを表す。「田舎にすんでいる」も同じ用法。",
+  },
+  {
+    id: "y10", category: "語句の用法", difficulty: 3,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は椅子にかけて休んだ。",
+    choices: ["ソファーに深く腰をかける", "壁にカレンダーをかける", "友人に電話をかける", "彼に迷惑をかける"],
+    answer: 0,
+    explanation: "「かける」がここでは「座る」という意味で使われている。「腰をかける」も同じ用法。",
+  },
+  {
+    id: "y11", category: "語句の用法", difficulty: 3,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "駅前に新しいビルがたつ。",
+    choices: ["演壇に立つ", "月日がたつのは早い", "来年、新しい家がたつ予定だ", "根も葉もない噂がたつ"],
+    answer: 2,
+    explanation: "「たつ（建つ）」は建物が造られることを表す。「新しい家がたつ」も同じ用法。",
+  },
+  {
+    id: "y12", category: "語句の用法", difficulty: 4,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "問題解決を図る。",
+    choices: ["ストップウォッチで時間を計る", "体重計で体重を量る", "取引先の便宜を図る", "巻尺で距離を測る"],
+    answer: 2,
+    explanation: "「はかる（図る）」がここでは「工夫して実現しようとする」という意味で使われている。「便宜を図る」も同じ用法。",
+  },
+  {
+    id: "y13", category: "語句の用法", difficulty: 5,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "委員会は彼を次期委員長に推す。",
+    choices: ["エレベーターのボタンをおす", "動かなくなった車をおす", "有力候補として彼をおす", "書類に判子をおす"],
+    answer: 2,
+    explanation: "「おす（推す）」がここでは「ふさわしいとして薦める」という意味で使われている。「候補として推す」も同じ用法。",
+  },
+  {
+    id: "y14", category: "語句の用法", difficulty: 5,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は先頭をきって走り出した。",
+    choices: ["はさみで紙をきる", "新しい生活のスタートをきる", "テレビの電源をきる", "提出の期限をきる"],
+    answer: 1,
+    explanation: "「きる」がここでは「物事を思い切って始める」という意味で使われている。「スタートをきる」も同じ用法。",
+  },
+  {
+    id: "y15", category: "語句の用法", difficulty: 1,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "桜の花が咲き、やがて実がなる。",
+    choices: ["朝から電話がなる", "柿の実がなる", "犬が遠くでなく", "運動会の音楽がなる"],
+    answer: 1,
+    explanation: "「なる（成る）」がここでは「実ができる」という意味で使われている。「柿の実がなる」も同じ用法。",
+  },
+  {
+    id: "y16", category: "語句の用法", difficulty: 1,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "駅で偶然、旧友にあった。",
+    choices: ["二つの色がよくあう", "駅前で旧友にばったりあった", "意見があう", "サイズがあう"],
+    answer: 1,
+    explanation: "「あう（会う）」は人と顔を合わせることを表す。「旧友にばったりあった」も同じ用法。",
+  },
+  {
+    id: "y17", category: "語句の用法", difficulty: 1,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は毎朝、公園を走る。",
+    choices: ["時間だけが早く走る（過ぎる）", "彼は毎日全力で校庭を走る", "噂が町中を走る", "痛みが体を走る"],
+    answer: 1,
+    explanation: "「走る」がここでは「足を使って進む」という文字通りの意味で使われている。「校庭を走る」も同じ用法。",
+  },
+  {
+    id: "y18", category: "語句の用法", difficulty: 2,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "来年、新しい家をたてる予定だ。",
+    choices: ["旅行の計画をたてる", "玄関に旗をたてる", "駅前に新しい工場をたてる", "大きな手柄をたてる"],
+    answer: 2,
+    explanation: "「たてる（建てる）」は建物を造ることを表す。「工場をたてる」も同じ用法。",
+  },
+  {
+    id: "y19", category: "語句の用法", difficulty: 2,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は大学にはいることを目標にしている。",
+    choices: ["荷物がぴったり箱にはいる", "先輩の勧めで部活動にはいる", "スイッチがはいる", "急に気合いがはいる"],
+    answer: 1,
+    explanation: "「はいる（入る）」がここでは「組織に加わる」という意味で使われている。「部活動にはいる」も同じ用法。",
+  },
+  {
+    id: "y20", category: "語句の用法", difficulty: 2,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "風邪をなおすために早く寝る。",
+    choices: ["レポートの誤字をなおす", "薬を飲んで病気をなおす", "壊れた自転車をなおす", "会議の予定をなおす"],
+    answer: 1,
+    explanation: "「なおす（治す）」は病気やけがを回復させることを表す。「病気をなおす」も同じ用法。",
+  },
+  {
+    id: "y21", category: "語句の用法", difficulty: 3,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は結婚式で主役をつとめた。",
+    choices: ["卒業後、地元の会社につとめる", "劇の主役をつとめる", "問題解決につとめる", "銀行員としてつとめる"],
+    answer: 1,
+    explanation: "「つとめる（務める）」がここでは「役割を果たす」という意味で使われている。「主役をつとめる」も同じ用法。",
+  },
+  {
+    id: "y22", category: "語句の用法", difficulty: 3,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "雲の間から太陽があらわれた。",
+    choices: ["言葉で感謝の気持ちをあらわす", "山の向こうに虹があらわれた", "彼は数冊の本をあらわした", "グラフで結果をあらわす"],
+    answer: 1,
+    explanation: "「あらわれる（現れる）」は姿を見せることを表す。「虹があらわれた」も同じ用法。",
+  },
+  {
+    id: "y23", category: "語句の用法", difficulty: 3,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は最近、猫をかい始めた。",
+    choices: ["スーパーで食料をかう", "自宅で小鳥をかっている", "無用な反感をかう", "周囲から高い評価をかう"],
+    answer: 1,
+    explanation: "「かう（飼う）」は動物を養い育てることを表す。「小鳥をかう」も同じ用法。",
+  },
+  {
+    id: "y24", category: "語句の用法", difficulty: 4,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は最後まで自分の意見をとおした。",
+    choices: ["針に糸をとおす", "最後まで初志をとおした", "客を応接室にとおす", "資料に目をとおす"],
+    answer: 1,
+    explanation: "「とおす（通す）」がここでは「主張などを最後まで貫く」という意味で使われている。「初志をとおす」も同じ用法。",
+  },
+  {
+    id: "y25", category: "語句の用法", difficulty: 4,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "武将は敵将をうち取った。",
+    choices: ["太鼓を力強くうつ", "拳銃でうつ", "見事に敵の大将をうち取った", "友の言葉に心をうたれる"],
+    answer: 2,
+    explanation: "「うつ（討つ）」は敵を滅ぼすことを表す。「敵の大将をうち取る」も同じ用法。",
+  },
+  {
+    id: "y26", category: "語句の用法", difficulty: 4,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は自分の失敗を激しくせめた。",
+    choices: ["全力で城をせめる", "遅刻したことをせめられる", "相手陣地にせめこむ", "敵の弱点をせめる"],
+    answer: 1,
+    explanation: "「せめる（責める）」は相手や自分の過失を非難することを表す。「遅刻をせめられる」も同じ用法。",
+  },
+  {
+    id: "y27", category: "語句の用法", difficulty: 5,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼はその道をきわめた。",
+    choices: ["山の頂をきわめる", "長年の研究で学問をきわめた", "疲労がきわまる", "贅沢をきわめる"],
+    answer: 1,
+    explanation: "「きわめる（究める）」がここでは「深く学び、真理や奥義に到達する」という意味で使われている。「学問をきわめる」も同じ用法。",
+  },
+  {
+    id: "y28", category: "語句の用法", difficulty: 5,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は苦しい訓練にたえた。",
+    choices: ["旧友からの消息がたえて久しい", "痛みによくたえる", "見るにたえない光景だった", "彼の家系はたえてしまった"],
+    answer: 1,
+    explanation: "「たえる（耐える）」は苦痛や困難をこらえることを表す。「痛みにたえる」も同じ用法。",
+  },
+  {
+    id: "y29", category: "語句の用法", difficulty: 5,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は態度をあらためた。",
+    choices: ["日をあらためて伺います", "悪い習慣をあらためる", "姿勢をあらためて話を聞く", "戸籍上の名前をあらためる"],
+    answer: 1,
+    explanation: "「あらためる（改める）」がここでは「悪い点を良い方向に変える」という意味で使われている。「悪い習慣をあらためる」も同じ用法。",
+  },
+  {
+    id: "y30", category: "語句の用法", difficulty: 5,
+    prompt: "下線部と同じ意味・用法で使われているものを選びなさい。",
+    stem: "彼は友のために力をつくした。",
+    choices: ["夜になって電気がつく", "ようやく目的地につく", "皆のために誠意をつくす", "山頂にたどりつく"],
+    answer: 2,
+    explanation: "「つくす（尽くす）」は力や心を惜しまず出し切ることを表す。「誠意をつくす」も同じ用法。",
+  },
+
+  // ── 文章整序 ──────────────────────────────
+  {
+    id: "s1", category: "文章整序", difficulty: 2,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そのため、多くの企業が在宅勤務を導入し始めた\n" +
+      "イ．感染症の流行により、人々の働き方は大きく変化した\n" +
+      "ウ．今では在宅勤務が当たり前の選択肢の一つとなっている\n" +
+      "エ．当初は戸惑う声も多かったが、次第に定着していった",
+    choices: ["イ→ア→エ→ウ", "イ→エ→ア→ウ", "ア→イ→エ→ウ", "イ→ア→ウ→エ"],
+    answer: 0,
+    explanation: "イ（変化の背景）→ア（対応の結果）→エ（当初の反応）→ウ（現在の状況）という時系列の流れが自然。",
+  },
+  {
+    id: "s2", category: "文章整序", difficulty: 2,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そして、ついに念願の合格を勝ち取った\n" +
+      "イ．彼女は毎日遅くまで勉強を続けた\n" +
+      "ウ．試験当日はとても緊張していたようだ\n" +
+      "エ．努力が実を結んだ瞬間だった",
+    choices: ["イ→ウ→ア→エ", "イ→ア→ウ→エ", "ウ→イ→ア→エ", "イ→エ→ア→ウ"],
+    answer: 0,
+    explanation: "イ（努力の描写）→ウ（試験当日）→ア（結果）→エ（結びの感想）という流れが自然。",
+  },
+  {
+    id: "s3", category: "文章整序", difficulty: 3,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．しかし、練習を重ねるうちに上達していった\n" +
+      "イ．彼は初めてピアノに触れたとき、うまく弾けなかった\n" +
+      "ウ．今では発表会で演奏を任されるまでになった\n" +
+      "エ．特に基礎練習を毎日欠かさなかったことが大きい",
+    choices: ["イ→ア→エ→ウ", "イ→エ→ア→ウ", "ア→イ→ウ→エ", "イ→ウ→ア→エ"],
+    answer: 0,
+    explanation: "イ（最初の状態）→ア（練習による変化）→エ（理由の補足）→ウ（現在の結果）という流れが自然。",
+  },
+  {
+    id: "s4", category: "文章整序", difficulty: 3,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．その結果、売上は前年比で20%増加した\n" +
+      "イ．ある企業が新商品の販売戦略を大きく見直した\n" +
+      "ウ．具体的には、SNSを活用した広告を強化した\n" +
+      "エ．今後もこの戦略を継続していく方針だという",
+    choices: ["イ→ウ→ア→エ", "イ→ア→ウ→エ", "ウ→イ→ア→エ", "イ→ウ→エ→ア"],
+    answer: 0,
+    explanation: "イ（戦略見直しの提示）→ウ（具体策）→ア（結果）→エ（今後の方針）という流れが自然。",
+  },
+  {
+    id: "s5", category: "文章整序", difficulty: 4,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そこで政府は新たな政策を打ち出した\n" +
+      "イ．近年、地方における人口減少が深刻な課題となっている\n" +
+      "ウ．若者の雇用創出を主な目的としたものである\n" +
+      "エ．ただし、この政策の効果はまだ明らかになっていない",
+    choices: ["イ→ア→ウ→エ", "ア→イ→ウ→エ", "イ→ウ→ア→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（課題の提示）→ア（対応策）→ウ（政策内容の補足）→エ（効果への言及）という流れが自然。",
+  },
+  {
+    id: "s6", category: "文章整序", difficulty: 5,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．一方で、AIが人間の仕事を奪うという懸念の声も根強い\n" +
+      "イ．AI技術の発展は、私たちの生活に多くの利便性をもたらしている\n" +
+      "ウ．こうした課題に対応するためには、社会全体での議論が不可欠である\n" +
+      "エ．例えば、家事の自動化や医療診断の精度向上などがその一例である",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "イ→エ→ウ→ア", "ア→イ→エ→ウ"],
+    answer: 0,
+    explanation: "イ（導入：利便性）→エ（具体例）→ア（懸念点への転換）→ウ（結論：議論の必要性）という流れが自然。",
+  },
+  {
+    id: "s7", category: "文章整序", difficulty: 1,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そして、駅前の新しいカフェに立ち寄った\n" +
+      "イ．休日、彼女は久しぶりに街へ出かけた\n" +
+      "ウ．そこでゆっくりとコーヒーを楽しんだ\n" +
+      "エ．とても穏やかな一日だった",
+    choices: ["イ→ア→ウ→エ", "イ→ウ→ア→エ", "ア→イ→ウ→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（外出のきっかけ）→ア（立ち寄った場所）→ウ（そこでの行動）→エ（結びの感想）という流れが自然。",
+  },
+  {
+    id: "s8", category: "文章整序", difficulty: 1,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．朝早く起きて、公園を散歩した\n" +
+      "イ．彼は健康のため、毎朝運動をすることにした\n" +
+      "ウ．気持ちの良い一日の始まりだった\n" +
+      "エ．最初は三日坊主だったが、今では習慣になっている",
+    choices: ["イ→ア→エ→ウ", "イ→エ→ア→ウ", "ア→イ→エ→ウ", "イ→ア→ウ→エ"],
+    answer: 0,
+    explanation: "イ（決意）→ア（具体的な行動）→エ（継続の経過）→ウ（結びの感想）という流れが自然。",
+  },
+  {
+    id: "s9", category: "文章整序", difficulty: 2,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そのため、多くの観光客が訪れるようになった\n" +
+      "イ．この街は近年、古い町並みを保存する取り組みを進めてきた\n" +
+      "ウ．今では地域の重要な観光資源となっている\n" +
+      "エ．景観を守るための条例も制定された",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（取り組みの提示）→エ（具体策）→ア（結果）→ウ（現在の状況）という流れが自然。",
+  },
+  {
+    id: "s10", category: "文章整序", difficulty: 2,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．やがて雨は止み、空には虹がかかった\n" +
+      "イ．午後から急に空が暗くなり、激しい雨が降り出した\n" +
+      "ウ．子どもたちは窓の外の虹を見て歓声を上げた\n" +
+      "エ．しばらくの間、外に出ることができなかった",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（天候の変化）→エ（その影響）→ア（天候の回復）→ウ（結果としての反応）という流れが自然。",
+  },
+  {
+    id: "s11", category: "文章整序", difficulty: 3,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．しかし、価格の高さがネックとなっている\n" +
+      "イ．この新製品は従来品に比べて性能が大幅に向上した\n" +
+      "ウ．メーカーは今後、価格の見直しを検討しているという\n" +
+      "エ．特に耐久性の面で高い評価を得ている",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（性能向上の提示）→エ（具体的な評価）→ア（課題への転換）→ウ（今後の対応）という流れが自然。",
+  },
+  {
+    id: "s12", category: "文章整序", difficulty: 4,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．その結果、地域経済にも良い影響が出ている\n" +
+      "イ．市は観光振興のため、新たなイベントを企画した\n" +
+      "ウ．イベントには予想を上回る来場者が集まった\n" +
+      "エ．今後も継続的に開催していく予定である",
+    choices: ["イ→ウ→ア→エ", "イ→ア→ウ→エ", "ウ→イ→ア→エ", "イ→ウ→エ→ア"],
+    answer: 0,
+    explanation: "イ（企画の提示）→ウ（結果としての反響）→ア（波及効果）→エ（今後の方針）という流れが自然。",
+  },
+  {
+    id: "s13", category: "文章整序", difficulty: 4,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．なぜなら、睡眠不足は集中力の低下を招くからである\n" +
+      "イ．十分な睡眠をとることは、健康維持において重要である\n" +
+      "ウ．そのため、規則正しい生活習慣を心がける必要がある\n" +
+      "エ．また、免疫力の低下にもつながるとされている",
+    choices: ["イ→ア→エ→ウ", "イ→エ→ア→ウ", "ア→イ→エ→ウ", "イ→ア→ウ→エ"],
+    answer: 0,
+    explanation: "イ（主張）→ア（理由）→エ（理由の補足）→ウ（結論としての提言）という流れが自然。",
+  },
+  {
+    id: "s14", category: "文章整序", difficulty: 5,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．とはいえ、すべての業務を自動化できるわけではない\n" +
+      "イ．業務の効率化を目的として、多くの企業がAIを導入している\n" +
+      "ウ．人間にしかできない判断や創造的な作業は依然として残る\n" +
+      "エ．導入により、単純作業にかかる時間は大幅に削減された",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（目的の提示）→エ（成果）→ア（限界への転換）→ウ（結論の補足）という流れが自然。",
+  },
+  {
+    id: "s15", category: "文章整序", difficulty: 1,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．公園でお弁当を食べた\n" +
+      "イ．家族で近くの公園に出かけた\n" +
+      "ウ．午後は皆でボール遊びを楽しんだ\n" +
+      "エ．楽しい休日になった",
+    choices: ["イ→ア→ウ→エ", "イ→ウ→ア→エ", "ア→イ→ウ→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（出かける）→ア（昼食）→ウ（午後の活動）→エ（結びの感想）という時系列の流れが自然。",
+  },
+  {
+    id: "s16", category: "文章整序", difficulty: 1,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．図書館で静かに本を読んだ\n" +
+      "イ．彼は放課後、図書館に立ち寄った\n" +
+      "ウ．気づけば閉館の時間になっていた\n" +
+      "エ．充実した時間を過ごせた",
+    choices: ["イ→ア→ウ→エ", "イ→ウ→ア→エ", "ア→イ→ウ→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（立ち寄る）→ア（読書）→ウ（時間の経過）→エ（結びの感想）という流れが自然。",
+  },
+  {
+    id: "s17", category: "文章整序", difficulty: 2,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そのため、来客数は着実に増加している\n" +
+      "イ．このレストランは地元の食材にこだわった料理を提供している\n" +
+      "ウ．今では地域を代表する人気店となった\n" +
+      "エ．味だけでなく、盛り付けにもこだわりが感じられる",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（特徴の提示）→エ（補足説明）→ア（結果）→ウ（現在の状況）という流れが自然。",
+  },
+  {
+    id: "s18", category: "文章整序", difficulty: 2,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．結果、旅行の計画は延期になった\n" +
+      "イ．出発の前日、天気予報で台風の接近が伝えられた\n" +
+      "ウ．家族は落胆したが、仕方がないと納得した\n" +
+      "エ．安全を最優先に考えた判断だった",
+    choices: ["イ→ア→エ→ウ", "イ→エ→ア→ウ", "ア→イ→エ→ウ", "イ→ア→ウ→エ"],
+    answer: 0,
+    explanation: "イ（出来事）→ア（結果）→エ（理由の補足）→ウ（結びの反応）という流れが自然。",
+  },
+  {
+    id: "s19", category: "文章整序", difficulty: 3,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．一方で、収穫量は天候に大きく左右される\n" +
+      "イ．この地域では古くから稲作が盛んに行われてきた\n" +
+      "ウ．そのため、農家は日々天候の変化に気を配っている\n" +
+      "エ．長年の経験に基づく知恵が受け継がれている",
+    choices: ["イ→ア→ウ→エ", "イ→ウ→ア→エ", "ア→イ→ウ→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（背景）→ア（課題への転換）→ウ（対応）→エ（結びの補足）という流れが自然。",
+  },
+  {
+    id: "s20", category: "文章整序", difficulty: 3,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．しかし、コストの問題から普及は思うように進んでいない\n" +
+      "イ．再生可能エネルギーへの関心が世界的に高まっている\n" +
+      "ウ．今後は技術革新によるコスト削減が期待されている\n" +
+      "エ．特に太陽光発電への注目が集まっている",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（導入）→エ（具体例）→ア（課題への転換）→ウ（今後の展望）という流れが自然。",
+  },
+  {
+    id: "s21", category: "文章整序", difficulty: 3,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そのきっかけは、幼い頃に見た一枚の絵画だったという\n" +
+      "イ．彼女は画家としての道を歩み始めた\n" +
+      "ウ．今では国内外で高く評価される作家となっている\n" +
+      "エ．その絵に心を奪われ、自らも描き始めたのだ",
+    choices: ["ア→エ→イ→ウ", "イ→ア→エ→ウ", "ア→イ→エ→ウ", "エ→ア→イ→ウ"],
+    answer: 1,
+    explanation: "イ（事実の提示）→ア（きっかけの説明）→エ（きっかけの詳細）→ウ（現在の評価）という流れが自然。",
+  },
+  {
+    id: "s22", category: "文章整序", difficulty: 4,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そのため、企業側も柔軟な対応を迫られている\n" +
+      "イ．働き方に対する価値観は世代によって大きく異なる\n" +
+      "ウ．若い世代は仕事とプライベートの両立を重視する傾向がある\n" +
+      "エ．一方で、従来型の働き方を好む層も一定数存在する",
+    choices: ["イ→ウ→エ→ア", "イ→ア→ウ→エ", "ウ→イ→エ→ア", "イ→ウ→ア→エ"],
+    answer: 0,
+    explanation: "イ（主張）→ウ（具体例1）→エ（対照的な具体例）→ア（結論としての対応）という流れが自然。",
+  },
+  {
+    id: "s23", category: "文章整序", difficulty: 4,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．しかし、その裏では長時間労働という課題も抱えていた\n" +
+      "イ．この企業は急成長を遂げ、業界内で高い評価を得た\n" +
+      "ウ．経営陣は働き方改革に本格的に着手した\n" +
+      "エ．結果として、離職率は大幅に改善された",
+    choices: ["イ→ア→ウ→エ", "イ→ウ→ア→エ", "ア→イ→ウ→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（成長の提示）→ア（課題への転換）→ウ（対応）→エ（結果）という流れが自然。",
+  },
+  {
+    id: "s24", category: "文章整序", difficulty: 5,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．だが、その代償として個人情報保護の課題が浮き彫りになった\n" +
+      "イ．デジタル技術の進展により、行政サービスは大きく効率化された\n" +
+      "ウ．今後は利便性と安全性の両立が求められる\n" +
+      "エ．例えば、オンラインでの各種手続きが可能になった",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（変化の提示）→エ（具体例）→ア（課題への転換）→ウ（結論）という流れが自然。",
+  },
+  {
+    id: "s25", category: "文章整序", difficulty: 1,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．彼は少しずつ料理の腕を上げていった\n" +
+      "イ．彼は一人暮らしを始め、自炊をするようになった\n" +
+      "ウ．今では友人を招いて手料理を振る舞うほどだ\n" +
+      "エ．最初は簡単な料理しか作れなかった",
+    choices: ["イ→エ→ア→ウ", "イ→ア→エ→ウ", "エ→イ→ア→ウ", "イ→エ→ウ→ア"],
+    answer: 0,
+    explanation: "イ（きっかけ）→エ（最初の状態）→ア（変化）→ウ（現在の様子）という流れが自然。",
+  },
+  {
+    id: "s26", category: "文章整序", difficulty: 2,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そこで先生に質問をしたところ、丁寧に教えてくれた\n" +
+      "イ．授業中、彼は問題の解き方が分からず困っていた\n" +
+      "ウ．おかげで無事に問題を解くことができた\n" +
+      "エ．それ以来、分からないことはすぐに質問するようにしている",
+    choices: ["イ→ア→ウ→エ", "イ→ウ→ア→エ", "ア→イ→ウ→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（困った状況）→ア（対応）→ウ（結果）→エ（その後の変化）という流れが自然。",
+  },
+  {
+    id: "s27", category: "文章整序", difficulty: 3,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．結果、チーム全体の士気が向上した\n" +
+      "イ．新しいリーダーはメンバーの意見をよく聞くようになった\n" +
+      "ウ．以前は一方的な指示が多く、不満の声もあった\n" +
+      "エ．コミュニケーションの活性化が功を奏したといえる",
+    choices: ["ウ→イ→ア→エ", "イ→ウ→ア→エ", "ウ→ア→イ→エ", "ウ→イ→エ→ア"],
+    answer: 0,
+    explanation: "ウ（以前の状況）→イ（変化）→ア（結果）→エ（結びの考察）という流れが自然。",
+  },
+  {
+    id: "s28", category: "文章整序", difficulty: 4,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．そのため、企業は情報漏洩対策に多額の投資をしている\n" +
+      "イ．近年、サイバー攻撃の手口はますます巧妙になっている\n" +
+      "ウ．しかし、完全に防ぐことは難しいのが実情である\n" +
+      "エ．人的な要因によるミスも被害拡大の一因とされる",
+    choices: ["イ→ア→ウ→エ", "イ→ウ→ア→エ", "ア→イ→ウ→エ", "イ→ア→エ→ウ"],
+    answer: 0,
+    explanation: "イ（背景）→ア（対応）→ウ（限界）→エ（補足要因）という流れが自然。",
+  },
+  {
+    id: "s29", category: "文章整序", difficulty: 5,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．とはいえ、次の世代にどう伝えていくかが課題として残る\n" +
+      "イ．この伝統工芸は職人の手作業によって受け継がれてきた\n" +
+      "ウ．しかし、後継者不足が深刻な問題となっている\n" +
+      "エ．若手職人の育成に取り組む動きも出てきている",
+    choices: ["イ→ウ→エ→ア", "イ→エ→ウ→ア", "ウ→イ→エ→ア", "イ→ウ→ア→エ"],
+    answer: 0,
+    explanation: "イ（背景）→ウ（課題）→エ（対応）→ア（残された課題）という流れが自然。",
+  },
+  {
+    id: "s30", category: "文章整序", difficulty: 5,
+    prompt: "ア〜エを意味が通るように並べ替えたとき、正しい順序を選びなさい。",
+    stem:
+      "ア．一方、短期的な数値目標にとらわれすぎる弊害も指摘されている\n" +
+      "イ．企業経営において、長期的な視点を持つことの重要性が説かれてきた\n" +
+      "ウ．両者のバランスをどう取るかが、経営者に求められる課題である\n" +
+      "エ．目先の利益を優先するあまり、将来的な投資を怠るケースもある",
+    choices: ["イ→ア→エ→ウ", "イ→エ→ア→ウ", "ア→イ→エ→ウ", "イ→ア→ウ→エ"],
+    answer: 0,
+    explanation: "イ（主張）→ア（対照的な視点）→エ（具体例）→ウ（結論）という流れが自然。",
+  },
+
+  // ── 空欄補充 ──────────────────────────────
+  {
+    id: "b1", category: "空欄補充", difficulty: 1,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼はいつも（　）に仕事をこなす。",
+    choices: ["丁寧", "乱暴", "適当", "怠惰"],
+    answer: 0,
+    explanation: "文脈上、良い意味で仕事をこなす様子を表す言葉が入る。「丁寧」が適切。",
+  },
+  {
+    id: "b2", category: "空欄補充", difficulty: 2,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "長年の努力が（　）を結び、ついに大会で優勝した。",
+    choices: ["実", "花", "芽", "根"],
+    answer: 0,
+    explanation: "「実を結ぶ」＝努力が良い結果として現れることを表す慣用句。",
+  },
+  {
+    id: "b3", category: "空欄補充", difficulty: 3,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼女は周囲の意見に（　）されることなく、自分の信念を貫いた。",
+    choices: ["賛成", "左右", "協力", "期待"],
+    answer: 1,
+    explanation: "「左右される」＝他者の意見や状況に影響を受けること。文脈に合致する。",
+  },
+  {
+    id: "b4", category: "空欄補充", difficulty: 4,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "この計画は予算の都合上、（　）を余儀なくされた。",
+    choices: ["拡大", "縮小", "継続", "促進"],
+    answer: 1,
+    explanation: "予算不足という文脈から、規模を小さくせざるを得なかったと判断できる。",
+  },
+  {
+    id: "b5", category: "空欄補充", difficulty: 5,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の提案は一見合理的に見えるが、（　）検討すると矛盾点が多い。",
+    choices: ["表面的に", "大まかに", "詳細に", "簡単に"],
+    answer: 2,
+    explanation: "「一見合理的」と対比する形で、深く調べると矛盾があるという文脈のため「詳細に」が適切。",
+  },
+  {
+    id: "b6", category: "空欄補充", difficulty: 5,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の話はいつも（　）としていて、要点がつかみにくい。",
+    choices: ["明瞭", "曖昧模糊", "簡潔", "論理的"],
+    answer: 1,
+    explanation: "「曖昧模糊」＝物事がはっきりせず、要点をつかみにくい様子。文脈に合致する。",
+  },
+  {
+    id: "b7", category: "空欄補充", difficulty: 1,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼女はいつも（　）な笑顔で周りを明るくする。",
+    choices: ["爽やか", "陰気", "険しい", "冷たい"],
+    answer: 0,
+    explanation: "文脈上、周りを明るくするポジティブな様子を表す言葉が入る。「爽やか」が適切。",
+  },
+  {
+    id: "b8", category: "空欄補充", difficulty: 1,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼は約束の時間に（　）に到着した。",
+    choices: ["正確", "曖昧", "乱雑", "不明"],
+    answer: 0,
+    explanation: "「約束の時間に正確に到着した」という文意が自然。",
+  },
+  {
+    id: "b9", category: "空欄補充", difficulty: 2,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "新しい技術の導入により、作業効率が大きく（　）した。",
+    choices: ["低下", "向上", "停滞", "悪化"],
+    answer: 1,
+    explanation: "新しい技術の導入というプラスの要因から、効率が良くなったと判断できる。",
+  },
+  {
+    id: "b10", category: "空欄補充", difficulty: 2,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の説明は具体例が豊富で、とても（　）だった。",
+    choices: ["分かりやすい", "分かりにくい", "曖昧", "抽象的"],
+    answer: 0,
+    explanation: "「具体例が豊富」という理由から、理解しやすいという結論が自然。",
+  },
+  {
+    id: "b11", category: "空欄補充", difficulty: 3,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼は失敗を（　）に、次の挑戦に向けて準備を始めた。",
+    choices: ["教訓", "障害", "原因", "結果"],
+    answer: 0,
+    explanation: "「〜を教訓に」＝失敗などの経験を今後に活かすべき学びとすること。文脈に合致する。",
+  },
+  {
+    id: "b12", category: "空欄補充", difficulty: 3,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼女の意見は的を（　）ており、多くの賛同を得た。",
+    choices: ["射", "外し", "逸らし", "曇らせ"],
+    answer: 0,
+    explanation: "「的を射る」＝物事の要点を正確に捉えること。多くの賛同を得たという結果と合致する。",
+  },
+  {
+    id: "b13", category: "空欄補充", difficulty: 4,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の発言は一部で（　）を呼び、議論が活発化した。",
+    choices: ["賛同", "物議", "沈黙", "安堵"],
+    answer: 1,
+    explanation: "「物議を呼ぶ」＝世間で意見や論争が巻き起こること。「議論が活発化した」という結果と合致する。",
+  },
+  {
+    id: "b14", category: "空欄補充", difficulty: 5,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の主張は（　）として、反論の余地がなかった。",
+    choices: ["漠然", "確固", "曖昧", "不安定"],
+    answer: 1,
+    explanation: "「確固として」＝しっかりしていて揺るがない様子。「反論の余地がなかった」という文脈に合致する。",
+  },
+  {
+    id: "b15", category: "空欄補充", difficulty: 1,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼は困っている人を見ると、いつも（　）に手を差し伸べる。",
+    choices: ["積極的", "消極的", "冷淡", "無関心"],
+    answer: 0,
+    explanation: "困っている人を助ける様子として、良い意味を持つ「積極的」が適切。",
+  },
+  {
+    id: "b16", category: "空欄補充", difficulty: 1,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "今日の会議は（　）に進行し、予定通り終わった。",
+    choices: ["円滑", "混乱", "停滞", "難航"],
+    answer: 0,
+    explanation: "「予定通り終わった」という結果から、物事がスムーズに進んだことを表す「円滑」が適切。",
+  },
+  {
+    id: "b17", category: "空欄補充", difficulty: 1,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼女はどんな困難にも（　）に立ち向かう。",
+    choices: ["前向き", "後ろ向き", "消極的", "無気力"],
+    answer: 0,
+    explanation: "困難に立ち向かう姿勢として、良い意味を持つ「前向き」が適切。",
+  },
+  {
+    id: "b18", category: "空欄補充", difficulty: 2,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "長引く不況で、多くの企業が経営の（　）を迫られている。",
+    choices: ["拡大", "見直し", "放置", "無視"],
+    answer: 1,
+    explanation: "不況という文脈から、経営方針を再検討せざるを得ない状況だと判断できる。",
+  },
+  {
+    id: "b19", category: "空欄補充", difficulty: 2,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の意見にはいつも（　）があり、周囲を納得させる。",
+    choices: ["説得力", "疑問", "不安", "混乱"],
+    answer: 0,
+    explanation: "「周囲を納得させる」という結果から、「説得力」が適切だと判断できる。",
+  },
+  {
+    id: "b20", category: "空欄補充", difficulty: 2,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼は周囲の期待を（　）、見事に大会で優勝した。",
+    choices: ["裏切り", "背負い", "無視し", "忘れ"],
+    answer: 1,
+    explanation: "「期待を背負う」＝他者からの期待を受け止めて努力すること。「見事に優勝した」という結果と合致する。",
+  },
+  {
+    id: "b21", category: "空欄補充", difficulty: 3,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の行動は、一見矛盾しているようで、実は（　）が通っている。",
+    choices: ["筋", "意味不明", "無関係", "矛盾"],
+    answer: 0,
+    explanation: "「筋が通る」＝話や行動に一貫した道理があること。文脈に合致する。",
+  },
+  {
+    id: "b22", category: "空欄補充", difficulty: 3,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼女はプレッシャーの中でも（　）を崩さず、冷静に対処した。",
+    choices: ["平常心", "緊張", "動揺", "焦り"],
+    answer: 0,
+    explanation: "「冷静に対処した」という結果から、「平常心」を保っていたと判断できる。",
+  },
+  {
+    id: "b23", category: "空欄補充", difficulty: 3,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "この提案には、コスト面で（　）が残る。",
+    choices: ["課題", "解決", "完成", "満足"],
+    answer: 0,
+    explanation: "コスト面において未解決の問題が残っているという文脈から、「課題」が適切。",
+  },
+  {
+    id: "b24", category: "空欄補充", difficulty: 3,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼は失敗を人のせいにせず、自分の責任として（　）した。",
+    choices: ["甘受", "拒否", "否定", "転嫁"],
+    answer: 0,
+    explanation: "「甘受する」＝不満を言わずに受け入れること。「自分の責任として」という文脈に合致する。",
+  },
+  {
+    id: "b25", category: "空欄補充", difficulty: 4,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "政府の対応は後手に（　）、批判が高まった。",
+    choices: ["回り", "先んじ", "進み", "徹し"],
+    answer: 0,
+    explanation: "「後手に回る」＝対応が遅れ、後手後手になること。「批判が高まった」という結果と合致する。",
+  },
+  {
+    id: "b26", category: "空欄補充", difficulty: 4,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼のスピーチは聴衆の心を（　）、大きな拍手が送られた。",
+    choices: ["掴み", "逃し", "冷やし", "疑い"],
+    answer: 0,
+    explanation: "「心を掴む」＝人の関心や共感を強く引きつけること。「大きな拍手」という結果と合致する。",
+  },
+  {
+    id: "b27", category: "空欄補充", difficulty: 4,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "両社の交渉は難航し、合意には至らず（　）に終わった。",
+    choices: ["決裂", "成立", "円満", "合意"],
+    answer: 0,
+    explanation: "「合意には至らず」という文脈から、交渉がまとまらなかったことを表す「決裂」が適切。",
+  },
+  {
+    id: "b28", category: "空欄補充", difficulty: 5,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の理論は斬新に見えるが、（　）を辿ると既存の説の焼き直しに過ぎない。",
+    choices: ["表層", "淵源", "未来", "結末"],
+    answer: 1,
+    explanation: "「淵源を辿る」＝物事の根本的な起源にさかのぼること。既存の説との関連を指摘する文脈に合致する。",
+  },
+  {
+    id: "b29", category: "空欄補充", difficulty: 5,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼女の功績は（　）に値するものであり、業界内でも高く評価されている。",
+    choices: ["賞賛", "軽視", "批判", "疑念"],
+    answer: 0,
+    explanation: "「賞賛に値する」＝褒め称えるにふさわしいこと。「高く評価されている」という文脈に合致する。",
+  },
+  {
+    id: "b30", category: "空欄補充", difficulty: 5,
+    prompt: "空欄に入る最も適切な言葉を選びなさい。",
+    stem: "彼の主張は一見筋が通っているようだが、（　）を突くと破綻する。",
+    choices: ["核心", "表面", "枝葉", "概要"],
+    answer: 0,
+    explanation: "「核心を突く」＝物事の最も重要な部分に切り込むこと。矛盾が明らかになる文脈に合致する。",
+  },
+];
+
+const QUIZ_LENGTH_OPTIONS = [10, 15, 20, 30, 40];
+const START_ABILITY = 50;
+
+/* 7段階の判定境界（careermine.jp記載の偏差値7段階を参考にしたシミュレーション値） */
+const GRADE_BANDS = [
+  { grade: 7, min: 70, label: "最上位クラス", desc: "上位2.3%相当。難関企業の基準を大きく上回る水準です。" },
+  { grade: 6, min: 62, label: "上位クラス", desc: "上位11.5%相当。人気企業のボーダーを安定して超える水準です。" },
+  { grade: 5, min: 54, label: "やや上位クラス", desc: "上位34.5%相当。多くの企業のボーダーを超えられる水準です。" },
+  { grade: 4, min: 46, label: "標準クラス", desc: "全体の中央付近。一般的な企業の基準は満たしやすい水準です。" },
+  { grade: 3, min: 38, label: "やや弱点クラス", desc: "基礎の見直しで得点アップが見込める水準です。" },
+  { grade: 2, min: 30, label: "要対策クラス", desc: "頻出パターンの反復演習を重点的に行いたい水準です。" },
+  { grade: 1, min: -Infinity, label: "基礎固めクラス", desc: "基本語彙・基本形式からじっくり固め直すのがおすすめです。" },
+];
+
+function getGrade(ability) {
+  return GRADE_BANDS.find((b) => ability >= b.min);
+}
+
+function pickNextQuestion(pool, askedIds, targetDifficulty) {
+  const available = pool.filter((q) => !askedIds.has(q.id));
+  if (available.length === 0) return null;
+  for (let radius = 0; radius <= 4; radius++) {
+    const candidates = available.filter(
+      (q) => Math.abs(q.difficulty - targetDifficulty) === radius
+    );
+    if (candidates.length > 0) {
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+  }
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+
+/* =========================================================
+   アプリの状態管理と描画（バニラJS）
+   ========================================================= */
+const state = {
+  phase: "start", // start | quiz | result
+  totalQuestions: 15,
+  askedIds: new Set(),
+  currentQuestion: null,
+  difficulty: 3,
+  ability: START_ABILITY,
+  history: [], // {id, category, difficulty, correct, stem, choices, answer, selectedIndex, explanation}
+  selected: null,
+  answered: false,
+  qIndex: 0,
+};
+
+const appEl = document.getElementById("app");
+
+function startQuiz() {
+  const first = pickNextQuestion(QUESTIONS, new Set(), 3);
+  state.askedIds = new Set([first.id]);
+  state.currentQuestion = first;
+  state.difficulty = 3;
+  state.ability = START_ABILITY;
+  state.history = [];
+  state.selected = null;
+  state.answered = false;
+  state.qIndex = 1;
+  state.phase = "quiz";
+  render();
+}
+
+function handleSelect(choiceIndex) {
+  if (state.answered) return;
+  const q = state.currentQuestion;
+  const correct = choiceIndex === q.answer;
+  state.selected = choiceIndex;
+  state.answered = true;
+
+  const delta = correct ? 3 + q.difficulty : -(3 + (6 - q.difficulty));
+  state.ability = Math.max(0, Math.min(100, state.ability + delta));
+
+  state.history.push({
+    id: q.id,
+    category: q.category,
+    difficulty: q.difficulty,
+    correct,
+    stem: q.stem,
+    choices: q.choices,
+    answer: q.answer,
+    selectedIndex: choiceIndex,
+    explanation: q.explanation,
+  });
+
+  state.difficulty = correct
+    ? Math.min(5, q.difficulty + 1)
+    : Math.max(1, q.difficulty - 1);
+
+  render();
+}
+
+function handleNext() {
+  if (state.qIndex >= state.totalQuestions) {
+    state.phase = "result";
+    render();
+    return;
+  }
+  const next = pickNextQuestion(QUESTIONS, state.askedIds, state.difficulty);
+  if (!next) {
+    state.phase = "result";
+    render();
+    return;
+  }
+  state.askedIds.add(next.id);
+  state.currentQuestion = next;
+  state.selected = null;
+  state.answered = false;
+  state.qIndex += 1;
+  render();
+}
+
+function restart() {
+  state.phase = "start";
+  render();
+}
+
+function setTotalQuestions(n) {
+  state.totalQuestions = n;
+  render();
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function starString(difficulty) {
+  return "★".repeat(difficulty) + "☆".repeat(5 - difficulty);
+}
+
+function render() {
+  if (state.phase === "start") return renderStart();
+  if (state.phase === "quiz") return renderQuiz();
+  if (state.phase === "result") return renderResult();
+}
+
+function renderStart() {
+  const lenButtons = QUIZ_LENGTH_OPTIONS.map(
+    (n) => `<button class="len-btn ${state.totalQuestions === n ? "active" : ""}" data-len="${n}">${n}問</button>`
+  ).join("");
+
+  appEl.innerHTML = `
+    <div class="header-bar">
+      <div>
+        <p class="eyebrow">SPI Language Simulator</p>
+        <h1 class="header-title serif">言語 適性検査シミュレーター</h1>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <h2 class="title serif">ようこそ</h2>
+        <p class="lead">二語の関係・語句の意味・語句の用法・文章整序・空欄補充の5分野、全150問の問題プールから出題します。</p>
+        <ul class="info-list">
+          <li>正解が続くと、次の問題は自動的に難しくなります</li>
+          <li>誤答が続くと、次の問題はやさしくなります</li>
+          <li>実際のSPIテストセンターと同様に、正答率に応じて到達した難易度が評価に反映されます</li>
+          <li>終了後、間違えた問題だけをまとめて振り返れる解説レビューが表示されます</li>
+          <li>最後に、あなたの実力を7段階で判定します</li>
+        </ul>
+        <p class="small-label">出題数を選んでください</p>
+        <div class="len-grid">${lenButtons}</div>
+        <button class="primary-btn" id="start-btn">診断をはじめる</button>
+      </div>
+    </div>
+  `;
+
+  appEl.querySelectorAll(".len-btn").forEach((btn) => {
+    btn.addEventListener("click", () => setTotalQuestions(Number(btn.dataset.len)));
+  });
+  document.getElementById("start-btn").addEventListener("click", startQuiz);
+}
+
+function renderQuiz() {
+  const q = state.currentQuestion;
+  const letters = ["A", "B", "C", "D"];
+
+  const choicesHtml = q.choices
+    .map((choice, idx) => {
+      let cls = "choice-btn";
+      if (state.answered) {
+        if (idx === q.answer) cls += " correct";
+        else if (idx === state.selected) cls += " incorrect";
+        else cls += " faded";
+      }
+      return `
+        <button class="${cls}" data-idx="${idx}" ${state.answered ? "disabled" : ""}>
+          <span class="letter">${letters[idx]}</span>
+          <span>${escapeHtml(choice)}</span>
+        </button>
+      `;
+    })
+    .join("");
+
+  let feedbackHtml = "";
+  if (state.answered) {
+    const isCorrect = state.selected === q.answer;
+    feedbackHtml = `
+      <div class="feedback-block">
+        <p class="feedback-title ${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "正解です" : "不正解です"}</p>
+        <p class="feedback-explanation">${escapeHtml(q.explanation)}</p>
+        <button class="dark-btn" id="next-btn">${state.qIndex >= state.totalQuestions ? "結果を見る" : "次の問題へ"}</button>
+      </div>
+    `;
+  }
+
+  appEl.innerHTML = `
+    <div class="header-bar">
+      <div>
+        <p class="eyebrow">SPI Language Simulator</p>
+        <h1 class="header-title serif">言語 適性検査シミュレーター</h1>
+      </div>
+      <div>
+        <p class="header-progress-label">問題</p>
+        <p class="header-progress-value serif">${state.qIndex}<span> / ${state.totalQuestions}</span></p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="q-top-row">
+          <span class="cat-badge">${escapeHtml(q.category)}</span>
+          <span class="diff-stars">難易度　${starString(q.difficulty)}</span>
+        </div>
+        <p class="prompt-text">${escapeHtml(q.prompt)}</p>
+        <div class="stem-box serif">${escapeHtml(q.stem)}</div>
+        <div class="choice-list">${choicesHtml}</div>
+        ${feedbackHtml}
+      </div>
+    </div>
+  `;
+
+  if (!state.answered) {
+    appEl.querySelectorAll(".choice-btn").forEach((btn) => {
+      btn.addEventListener("click", () => handleSelect(Number(btn.dataset.idx)));
+    });
+  } else {
+    const nextBtn = document.getElementById("next-btn");
+    if (nextBtn) nextBtn.addEventListener("click", handleNext);
+  }
+}
+
+function renderResult() {
+  const grade = getGrade(state.ability);
+  const correctCount = state.history.filter((h) => h.correct).length;
+  const wrongItems = state.history.filter((h) => !h.correct);
+
+  // 分野別正答率
+  const catMap = {};
+  state.history.forEach((h) => {
+    if (!catMap[h.category]) catMap[h.category] = { correct: 0, total: 0 };
+    catMap[h.category].total += 1;
+    if (h.correct) catMap[h.category].correct += 1;
+  });
+
+  const gaugeSegs = [1, 2, 3, 4, 5, 6, 7]
+    .map((g) => {
+      let cls = "gauge-seg";
+      if (g === grade.grade) cls += " current";
+      else if (g < grade.grade) cls += " past";
+      return `<div class="${cls}"></div>`;
+    })
+    .join("");
+
+  const catStatsHtml = Object.entries(catMap)
+    .map(([cat, s]) => {
+      const pct = (s.correct / s.total) * 100;
+      return `
+        <div class="cat-stat-row">
+          <span class="cat-stat-name">${escapeHtml(cat)}</span>
+          <div class="cat-stat-bar-bg"><div class="cat-stat-bar-fill" style="width:${pct}%"></div></div>
+          <span class="cat-stat-frac">${s.correct}/${s.total}</span>
+        </div>
+      `;
+    })
+    .join("");
+
+  const letters = ["A", "B", "C", "D"];
+
+  let reviewHtml = "";
+  if (wrongItems.length === 0) {
+    reviewHtml = `<div class="all-correct-msg">すべての問題に正解しました。素晴らしい結果です！</div>`;
+  } else {
+    const items = wrongItems
+      .map((h, i) => {
+        const choicesHtml = h.choices
+          .map((c, idx) => `${letters[idx]}. ${escapeHtml(c)}`)
+          .join("　");
+        return `
+          <div class="review-item">
+            <div class="review-item-top">
+              <span class="cat-badge">${escapeHtml(h.category)}</span>
+              <span class="review-item-num">難易度 ${starString(h.difficulty)}</span>
+            </div>
+            <p class="review-stem serif">${escapeHtml(h.stem)}</p>
+            <p class="review-answer-line">${choicesHtml}</p>
+            <p class="review-answer-line">あなたの回答：<span class="wrong-ans">${letters[h.selectedIndex]}. ${escapeHtml(h.choices[h.selectedIndex])}</span></p>
+            <p class="review-answer-line">正解：<span class="right-ans">${letters[h.answer]}. ${escapeHtml(h.choices[h.answer])}</span></p>
+            <p class="review-explanation">${escapeHtml(h.explanation)}</p>
+          </div>
+        `;
+      })
+      .join("");
+    reviewHtml = `
+      <div class="review-section">
+        <p class="review-header">間違えた問題の解説（${wrongItems.length}問）</p>
+        <p class="review-sub">苦手なパターンを重点的に復習しましょう。</p>
+        ${items}
+      </div>
+    `;
+  }
+
+  appEl.innerHTML = `
+    <div class="header-bar">
+      <div>
+        <p class="eyebrow">SPI Language Simulator</p>
+        <h1 class="header-title serif">言語 適性検査シミュレーター</h1>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <p class="result-eyebrow">RESULT</p>
+        <h2 class="title serif">診断結果</h2>
+
+        <div class="grade-row">
+          <div class="grade-circle"><span class="serif">${grade.grade}</span></div>
+          <div>
+            <p class="grade-title serif">段階 ${grade.grade} ／ 7</p>
+            <p class="grade-label">${escapeHtml(grade.label)}</p>
+          </div>
+        </div>
+        <p class="grade-desc">${escapeHtml(grade.desc)}</p>
+
+        <div class="gauge-wrap">
+          <p class="gauge-label">7段階評価ゲージ</p>
+          <div class="gauge-track">${gaugeSegs}</div>
+          <div class="gauge-caption"><span>段階1</span><span>段階7</span></div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-box">
+            <p class="stat-label">正答数</p>
+            <p class="stat-value serif">${correctCount} / ${state.history.length}</p>
+          </div>
+          <div class="stat-box">
+            <p class="stat-label">到達難易度</p>
+            <p class="stat-value serif">${starString(state.difficulty)}</p>
+          </div>
+        </div>
+
+        <div class="cat-stats">
+          <p class="cat-stats-label">分野別 正答率</p>
+          ${catStatsHtml}
+        </div>
+
+        ${reviewHtml}
+
+        <button class="primary-btn" id="restart-btn">もう一度挑戦する</button>
+        <p class="footnote">※本判定は、正答率と到達難易度をもとにしたシミュレーションです。実際のSPIテストセンターの公式スコアとは算出方法が異なるため、目安としてご活用ください。</p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("restart-btn").addEventListener("click", restart);
+}
+
+render();
+</script>
+</body>
+</html>
